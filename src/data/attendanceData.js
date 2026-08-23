@@ -1,7 +1,7 @@
-/* ── Attendance seed data — sourced from OFF_DAY_TRACKER.xlsx (August 2026) ──
-   Admin edits are persisted to localStorage on top of this seed. */
-
-export const ATTENDANCE_MONTH = { year: 2026, month: 8, label: 'August 2026' };
+/* ── Attendance roster — sourced from OFF_DAY_TRACKER.xlsx ──
+   Each staff member's weekly off day auto-generates their OFF days for
+   whichever month is showing. Admin edits (sick leave, absent, etc.)
+   are layered on top and persisted per month in localStorage. */
 
 export const STATUS_OPTIONS = ['', 'OFF', 'OFF*', 'SL', 'AL', 'ABS', 'FRL', 'Resign'];
 
@@ -16,42 +16,50 @@ export const STATUS_META = {
   'Resign': { label: 'Resigned',     color: '#71717a', bg: 'rgba(113,113,122,0.18)', text: '#a1a1aa' },
 };
 
-// statuses[i] = status for day (i+1) of the month, '' or null = working day
-export const SEED_STAFF = [
-  { name: 'Yanal', team: 'Champion', weeklyOff: 'Friday', offDayNum: 5, statuses: [null,null,null,null,null,null,'OFF','SL',null,null,null,null,'SL','OFF','ABS','ABS','FRL',null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null] },
-  { name: 'Sadha', team: 'Champion', weeklyOff: 'Wednesday', offDayNum: 3, statuses: [null,null,null,null,null,'OFF*','SL',null,null,null,null,null,'OFF*',null,'SL','ABS',null,null,null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null] },
-  { name: 'Nafkha', team: 'Champion', weeklyOff: 'Saturday', offDayNum: 6, statuses: ['OFF',null,null,null,null,null,null,null,'OFF*',null,'SL',null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null] },
-  { name: 'Jawidh', team: 'Champion', weeklyOff: 'Sunday', offDayNum: 7, statuses: [null,'OFF',null,null,null,null,null,null,'OFF',null,'SL',null,null,null,null,'OFF',null,null,null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null] },
-  { name: 'Aus', team: 'Champion', weeklyOff: 'Monday', offDayNum: 1, statuses: [null,null,'OFF',null,'AL','AL','AL','AL','AL','AL','AL','AL','AL','AL','AL','AL',null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF'] },
-  { name: 'Manaaf', team: 'Champion', weeklyOff: 'Monday', offDayNum: 1, statuses: [null,null,'OFF',null,null,null,null,null,null,null,'OFF*',null,'ABS','ABS','ABS','ABS','OFF','ABS',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF'] },
-  { name: 'Hafna', team: 'Champion', weeklyOff: 'Thursday', offDayNum: 4, statuses: [null,null,null,null,null,'OFF','SL',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,null,'OFF*',null,null,null] },
-  { name: 'Rahba', team: 'Champion', weeklyOff: 'Wednesday', offDayNum: 3, statuses: [null,null,null,null,null,'OFF*',null,null,'SL','SL','SL',null,'OFF*',null,null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null] },
-  { name: 'Lara', team: 'Champion', weeklyOff: 'Tuesday', offDayNum: 2, statuses: [null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null] },
-  { name: 'Ihusha', team: 'Champion', weeklyOff: 'Saturday', offDayNum: 6, statuses: ['OFF',null,null,null,null,null,null,'OFF',null,'SL','SL',null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null] },
-  { name: 'Affan', team: 'Champion', weeklyOff: 'Sunday', offDayNum: 7, statuses: [null,'OFF',null,null,null,null,null,'SL','OFF',null,null,null,null,null,null,'OFF',null,'SL',null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null] },
-  { name: 'Azmee', team: 'FDC Champ', weeklyOff: 'Sunday', offDayNum: 7, statuses: [null,'OFF',null,null,null,null,null,null,'OFF','SL','SL','Resign',null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null] },
-  { name: 'Hayath', team: 'FDC Champ', weeklyOff: 'Sunday', offDayNum: 7, statuses: [null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,'SL','OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null] },
-  { name: 'Raya', team: 'FDC Champ', weeklyOff: 'Tuesday', offDayNum: 2, statuses: [null,null,null,'OFF',null,null,null,null,null,'ABS','OFF','ABS','ABS','Resign',null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null] },
-  { name: 'Nazal', team: 'FDC Champ', weeklyOff: 'Sunday', offDayNum: 7, statuses: [null,'OFF',null,null,null,null,null,null,'OFF','SL',null,null,'SL',null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null] },
-  { name: 'Raaidh', team: 'FDC Champ', weeklyOff: 'Saturday', offDayNum: 6, statuses: ['OFF',null,null,null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null] },
-  { name: 'Maain', team: 'FDC Champ', weeklyOff: 'Saturday', offDayNum: 6, statuses: ['OFF',null,null,null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null] },
-  { name: 'Suma', team: 'FDC Champ', weeklyOff: 'Tuesday', offDayNum: 2, statuses: [null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,'FRL',null,'FRL','OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null] },
-  { name: 'Arusham', team: 'FDC Champ', weeklyOff: 'Thursday', offDayNum: 4, statuses: [null,null,null,null,null,'OFF','SL',null,null,null,null,null,'OFF',null,null,null,'SL',null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null] },
-  { name: 'Yoosuf', team: 'FDC Champ', weeklyOff: 'Thursday', offDayNum: 4, statuses: [null,null,null,null,null,'OFF','SL',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null] },
-  { name: 'Naushan', team: 'FDC Champ', weeklyOff: 'Wednesday', offDayNum: 3, statuses: [null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null] },
-  { name: 'Muaz', team: 'Distribution', weeklyOff: 'Friday', offDayNum: 5, statuses: [null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null] },
-  { name: 'Aleem', team: 'Distribution', weeklyOff: 'Saturday', offDayNum: 6, statuses: ['OFF',null,null,null,null,null,null,null,'OFF*',null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null] },
-  { name: 'Rismee', team: 'Back Office', weeklyOff: 'Friday', offDayNum: null, statuses: [null,null,null,null,null,null,'OFF',null,null,null,null,'SL',null,'OFF',null,null,null,null,null,null,'OFF',null,null,null,null,null,null,'OFF',null,null,null] },
+// Roster: name, team, and weekly off day — leave days are generated from this each month.
+export const ROSTER = [
+  { name: 'Yanal', team: 'Champion', weeklyOff: 'Friday' },
+  { name: 'Sadha', team: 'Champion', weeklyOff: 'Wednesday' },
+  { name: 'Nafkha', team: 'Champion', weeklyOff: 'Saturday' },
+  { name: 'Jawidh', team: 'Champion', weeklyOff: 'Sunday' },
+  { name: 'Aus', team: 'Champion', weeklyOff: 'Monday' },
+  { name: 'Manaaf', team: 'Champion', weeklyOff: 'Monday' },
+  { name: 'Hafna', team: 'Champion', weeklyOff: 'Thursday' },
+  { name: 'Rahba', team: 'Champion', weeklyOff: 'Wednesday' },
+  { name: 'Lara', team: 'Champion', weeklyOff: 'Tuesday' },
+  { name: 'Ihusha', team: 'Champion', weeklyOff: 'Saturday' },
+  { name: 'Affan', team: 'Champion', weeklyOff: 'Sunday' },
+  { name: 'Azmee', team: 'FDC Champ', weeklyOff: 'Sunday' },
+  { name: 'Hayath', team: 'FDC Champ', weeklyOff: 'Sunday' },
+  { name: 'Raya', team: 'FDC Champ', weeklyOff: 'Tuesday' },
+  { name: 'Nazal', team: 'FDC Champ', weeklyOff: 'Sunday' },
+  { name: 'Raaidh', team: 'FDC Champ', weeklyOff: 'Saturday' },
+  { name: 'Maain', team: 'FDC Champ', weeklyOff: 'Saturday' },
+  { name: 'Suma', team: 'FDC Champ', weeklyOff: 'Tuesday' },
+  { name: 'Arusham', team: 'FDC Champ', weeklyOff: 'Thursday' },
+  { name: 'Yoosuf', team: 'FDC Champ', weeklyOff: 'Thursday' },
+  { name: 'Naushan', team: 'FDC Champ', weeklyOff: 'Wednesday' },
+  { name: 'Muaz', team: 'Distribution', weeklyOff: 'Friday' },
+  { name: 'Aleem', team: 'Distribution', weeklyOff: 'Saturday' },
+  { name: 'Rismee', team: 'Back Office', weeklyOff: 'Friday' },
 ];
-
-export const STORMING_DAYS = {
-  5: 'Postpaid', 8: 'FBB', 10: 'Prepaid', 12: 'Postpaid', 17: 'FBB', 19: 'Postpaid', 23: 'Prepaid', 27: 'Postpaid',
-};
 
 export const TEAMS = ['Champion', 'FDC Champ', 'Distribution', 'Back Office'];
 
-export const DAY_LABELS = ['Sat','Sun','Mon','Tue','Wed','Thu','Fri'];
-// Aug 1 2026 is a Saturday
-export function dayLabel(dayNum) {
-  return DAY_LABELS[(dayNum - 1) % 7];
+export const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+export const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+export function daysInMonth(year, month /* 1-12 */) {
+  return new Date(year, month, 0).getDate();
+}
+
+export function weekdayOf(year, month, day) {
+  return WEEKDAY_NAMES[new Date(year, month - 1, day).getDay()];
+}
+
+// Builds a fresh statuses[] for the given month: 'OFF' on each staff member's
+// weekly off day, blank otherwise — admin edits then layer on top per-day.
+export function generateMonthStatuses(weeklyOff, year, month) {
+  const total = daysInMonth(year, month);
+  return Array.from({ length: total }, (_, i) => (weekdayOf(year, month, i + 1) === weeklyOff ? 'OFF' : null));
 }

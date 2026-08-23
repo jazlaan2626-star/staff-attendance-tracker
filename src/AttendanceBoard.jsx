@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Lock, Unlock, RotateCcw, Zap, ShieldCheck } from 'lucide-react';
+import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { useAttendance } from './data/useAttendance';
-import { STATUS_OPTIONS, STATUS_META, STORMING_DAYS, TEAMS, DAY_LABELS, ATTENDANCE_MONTH } from './data/attendanceData';
+import { STATUS_OPTIONS, STATUS_META, TEAMS, weekdayOf } from './data/attendanceData';
+import { downloadAttendanceExcel } from './data/exportExcel';
 
 const ORANGE = '#ff6a00';
-const DAYS_IN_MONTH = 31;
+const DAY_ABBR = { Sunday: 'Sun', Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat' };
 
 function Legend() {
   return (
@@ -101,7 +102,11 @@ function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
 }
 
 export default function AttendanceBoard() {
-  const { staff, setStatus, isAdmin, login, logout, resetToSeed, todayIndex } = useAttendance();
+  const {
+    staff, setStatus, isAdmin, login, logout, resetToSeed, todayIndex,
+    year, month, monthLabel, totalDays, isCurrentMonth,
+    goPrevMonth, goNextMonth, goToday,
+  } = useAttendance();
   const [teamFilter, setTeamFilter] = useState('All');
 
   const filtered = useMemo(
@@ -132,14 +137,14 @@ export default function AttendanceBoard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <p style={{ color: ORANGE, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Staff Attendance</p>
-          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Off-Day Tracker — {ATTENDANCE_MONTH.label}</h2>
+          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Off-Day Tracker</h2>
         </div>
         {isAdmin ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#22c55e', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '6px 10px' }}>
               <ShieldCheck size={13} /> Admin mode
             </span>
-            <button onClick={resetToSeed} title="Reset to original sheet data" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
+            <button onClick={resetToSeed} title="Reset this month to auto-generated off days" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
               <RotateCcw size={13} /> Reset
             </button>
             <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
@@ -149,6 +154,28 @@ export default function AttendanceBoard() {
         ) : (
           <AdminGate login={login} />
         )}
+      </div>
+
+      {/* Month navigator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <button onClick={goPrevMonth} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(255,106,0,0.25)', background: 'rgba(255,255,255,0.03)', color: ORANGE, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ChevronLeft size={15} />
+        </button>
+        <span className="grad-text" style={{ fontSize: 16, fontWeight: 800, minWidth: 150, textAlign: 'center' }}>{monthLabel}</span>
+        <button onClick={goNextMonth} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid rgba(255,106,0,0.25)', background: 'rgba(255,255,255,0.03)', color: ORANGE, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ChevronRight size={15} />
+        </button>
+        {!isCurrentMonth && (
+          <button onClick={goToday} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
+            Today
+          </button>
+        )}
+        <button
+          onClick={() => downloadAttendanceExcel(staff, monthLabel, totalDays, year, month)}
+          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,106,0,0.4)', background: 'rgba(255,106,0,0.1)', color: ORANGE, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+        >
+          <Download size={13} /> Download Excel
+        </button>
       </div>
 
       {offToday.length > 0 && (
@@ -167,7 +194,7 @@ export default function AttendanceBoard() {
         ))}
       </div>
 
-      <div className="card" noPad="true" style={{ padding: 20 }}>
+      <div className="card" style={{ padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
           <Legend />
           <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -186,12 +213,11 @@ export default function AttendanceBoard() {
               <tr>
                 <th style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#fff', textAlign: 'left', padding: '6px 10px', minWidth: 110, zIndex: 2 }}>Staff</th>
                 <th style={{ color: '#888', minWidth: 70, fontWeight: 600 }}>Weekly Off</th>
-                {Array.from({ length: DAYS_IN_MONTH }, (_, i) => i + 1).map((d) => (
-                  <th key={d} style={{ color: STORMING_DAYS[d] ? ORANGE : '#666', fontWeight: 700, minWidth: 30 }}>
+                {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
+                  <th key={d} style={{ color: '#666', fontWeight: 700, minWidth: 30 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      {STORMING_DAYS[d] && <Zap size={9} color={ORANGE} />}
                       {d}
-                      <span style={{ fontSize: 8, color: '#555', fontWeight: 400 }}>{DAY_LABELS[(d - 1) % 7]}</span>
+                      <span style={{ fontSize: 8, color: '#555', fontWeight: 400 }}>{DAY_ABBR[weekdayOf(year, month, d)]}</span>
                     </div>
                   </th>
                 ))}
@@ -205,13 +231,13 @@ export default function AttendanceBoard() {
                     <div style={{ color: '#666', fontSize: 9, fontWeight: 400 }}>{s.team}</div>
                   </td>
                   <td style={{ textAlign: 'center', color: '#888', fontSize: 10 }}>{s.weeklyOff}</td>
-                  {Array.from({ length: DAYS_IN_MONTH }, (_, i) => i).map((i) => (
+                  {Array.from({ length: totalDays }, (_, i) => i).map((i) => (
                     <td key={i} style={{ textAlign: 'center' }}>
                       <StatusCell
                         value={s.statuses[i]}
                         isAdmin={isAdmin}
                         isToday={i === todayIndex}
-                        isWeeklyOff={DAY_LABELS[i % 7] === s.weeklyOff?.slice(0, 3)}
+                        isWeeklyOff={weekdayOf(year, month, i + 1) === s.weeklyOff}
                         onChange={(v) => setStatus(s.name, i, v)}
                       />
                     </td>
