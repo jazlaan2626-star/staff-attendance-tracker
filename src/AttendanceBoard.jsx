@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search, CalendarDays } from 'lucide-react';
+import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search, CalendarDays, UserX, Undo2 } from 'lucide-react';
 import { useAttendance } from './data/useAttendance';
 import { STATUS_OPTIONS, STATUS_META, TEAMS, weekdayOf } from './data/attendanceData';
 import { downloadAttendanceExcel } from './data/exportExcel';
@@ -123,13 +123,17 @@ function TeamCell({ name, team, isAdmin, onChange }) {
 
 export default function AttendanceBoard() {
   const {
-    staff, setStatus, setTeam, isAdmin, login, logout, resetToSeed, todayIndex,
+    staff, setStatus, setTeam, setResigned, isAdmin, login, logout, resetToSeed, todayIndex,
     year, month, monthLabel, totalDays, isCurrentMonth,
     goPrevMonth, goNextMonth, goToday,
   } = useAttendance();
   const [teamFilter, setTeamFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState(null); // 1-based day of month, or null
+  const [showResigned, setShowResigned] = useState(false);
+
+  const activeStaff = useMemo(() => staff.filter((s) => !s.resigned), [staff]);
+  const resignedStaff = useMemo(() => staff.filter((s) => s.resigned), [staff]);
   const scrollRef = useRef(null);
   const dayRefs = useRef({});
 
@@ -148,24 +152,24 @@ export default function AttendanceBoard() {
   const monthMax = `${year}-${pad(month)}-${pad(totalDays)}`;
 
   const filtered = useMemo(() => {
-    const byTeam = teamFilter === 'All' ? staff : staff.filter((s) => s.team === teamFilter);
+    const byTeam = teamFilter === 'All' ? activeStaff : activeStaff.filter((s) => s.team === teamFilter);
     const q = search.trim().toLowerCase();
     return q ? byTeam.filter((s) => s.name.toLowerCase().includes(q)) : byTeam;
-  }, [staff, teamFilter, search]);
+  }, [activeStaff, teamFilter, search]);
 
   const offToday = useMemo(() => {
     if (todayIndex == null) return [];
-    return staff.filter((s) => s.statuses[todayIndex] === 'OFF').map((s) => s.name);
-  }, [staff, todayIndex]);
+    return activeStaff.filter((s) => s.statuses[todayIndex] === 'OFF').map((s) => s.name);
+  }, [activeStaff, todayIndex]);
 
   const summary = useMemo(() => {
     const counts = { OFF: 0, SL: 0, AL: 0, ABS: 0, FRL: 0, Resign: 0 };
-    staff.forEach((s) => s.statuses.forEach((v) => {
+    activeStaff.forEach((s) => s.statuses.forEach((v) => {
       if (!v || counts[v] === undefined) return;
       counts[v] += 1;
     }));
     return counts;
-  }, [staff]);
+  }, [activeStaff]);
 
   return (
     <section id="attendance" className="section">
@@ -182,6 +186,11 @@ export default function AttendanceBoard() {
             <button onClick={resetToSeed} title="Reset this month to auto-generated off days" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
               <RotateCcw size={13} /> Reset
             </button>
+            {resignedStaff.length > 0 && (
+              <button onClick={() => setShowResigned((v) => !v)} title="View resigned staff" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: `1px solid ${showResigned ? 'rgba(255,106,0,0.4)' : 'rgba(255,255,255,0.1)'}`, background: showResigned ? 'rgba(255,106,0,0.1)' : 'transparent', color: showResigned ? ORANGE : '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
+                <UserX size={13} /> Resigned ({resignedStaff.length})
+              </button>
+            )}
             <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
               <Unlock size={13} /> Lock
             </button>
@@ -206,12 +215,28 @@ export default function AttendanceBoard() {
           </button>
         )}
         <button
-          onClick={() => downloadAttendanceExcel(staff, monthLabel, totalDays, year, month)}
+          onClick={() => downloadAttendanceExcel(activeStaff, monthLabel, totalDays, year, month)}
           style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,106,0,0.4)', background: 'rgba(255,106,0,0.1)', color: ORANGE, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
         >
           <Download size={13} /> Download Excel
         </button>
       </div>
+
+      {isAdmin && showResigned && resignedStaff.length > 0 && (
+        <div className="card" style={{ padding: '14px 18px', marginBottom: 20, borderColor: 'rgba(255,255,255,0.1)' }}>
+          <p style={{ color: '#a3a3a3', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Resigned staff</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {resignedStaff.map((s) => (
+              <div key={s.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: '#e5e5e5', fontSize: 13 }}>{s.name} <span style={{ color: '#666', fontSize: 11 }}>· {s.team}</span></span>
+                <button onClick={() => setResigned(s.name, false)} title="Restore to active tracker" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 7, border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)', color: '#4ade80', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                  <Undo2 size={12} /> Restore
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {offToday.length > 0 && (
         <div className="card" style={{ padding: '14px 18px', marginBottom: 20, borderColor: 'rgba(255,106,0,0.3)' }}>

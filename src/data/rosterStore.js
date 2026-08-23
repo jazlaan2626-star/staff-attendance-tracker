@@ -16,10 +16,12 @@ function writeOverrides(overrides) {
   safeLocal.set(KEY, JSON.stringify(overrides));
 }
 
-// Roster with any admin edits (team/weekly-off changes) applied on top of the base sheet.
+// Roster with any admin edits (team/weekly-off/resigned changes) applied on top of the base sheet.
+// `resigned` is left undefined here unless explicitly set — callers fall back
+// to detecting a 'Resign' status in that month's data when it's untouched.
 export function effectiveRoster() {
   const overrides = readOverrides();
-  return ROSTER.map((s) => (overrides[s.name] ? { ...s, ...overrides[s.name] } : s));
+  return ROSTER.map((s) => ({ ...s, ...overrides[s.name] }));
 }
 
 export function updateRosterEntry(name, patch) {

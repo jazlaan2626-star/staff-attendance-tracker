@@ -13,8 +13,18 @@ function storageKey(year, month) {
   return `bluvia-attendance-v2-${year}-${month}`;
 }
 
+// A staff member counts as resigned if an admin explicitly set it, or —
+// when untouched — if any day this month is marked 'Resign' (so historical
+// sheet data with a resignation already recorded hides them automatically).
+function withResignedFlag(s) {
+  const resigned = s.resigned !== undefined ? s.resigned : s.statuses.includes('Resign');
+  return { ...s, resigned };
+}
+
 function buildStaffForMonth(year, month) {
-  return effectiveRoster().map((s) => ({ ...s, statuses: baseStatusesFor(s.name, s.weeklyOff, year, month) }));
+  return effectiveRoster()
+    .map((s) => ({ ...s, statuses: baseStatusesFor(s.name, s.weeklyOff, year, month) }))
+    .map(withResignedFlag);
 }
 
 // Legacy saves may contain statuses (e.g. the old 'OFF*') that no longer
@@ -58,12 +68,21 @@ export function useAttendance() {
   }, [staff, year, month]);
 
   const setStatus = useCallback((name, dayIndex, value) => {
+    // Marking a day 'Resign' takes the staff member off the active tracker
+    // (they can be brought back from the "Resigned staff" panel).
+    if (value === 'Resign') updateRosterEntry(name, { resigned: true });
     setStaff((prev) => prev.map((s) => {
       if (s.name !== name) return s;
       const statuses = [...s.statuses];
       statuses[dayIndex] = value || null;
-      return { ...s, statuses };
+      return { ...s, statuses, resigned: value === 'Resign' ? true : s.resigned };
     }));
+  }, []);
+
+  // Explicitly restores a resigned staff member back onto the active tracker.
+  const setResigned = useCallback((name, resigned) => {
+    updateRosterEntry(name, { resigned });
+    setStaff((prev) => prev.map((s) => (s.name === name ? { ...s, resigned } : s)));
   }, []);
 
   // Changes a staff member's team/category — persists globally (not per-month).
@@ -114,7 +133,7 @@ export function useAttendance() {
   const totalDays = daysInMonth(year, month);
 
   return {
-    staff, setStatus, setTeam, setWeeklyOff, isAdmin, login, logout, resetToSeed, todayIndex,
+    staff, setStatus, setTeam, setWeeklyOff, setResigned, isAdmin, login, logout, resetToSeed, todayIndex,
     year, month, monthLabel, totalDays, isCurrentMonth,
     goPrevMonth, goNextMonth, goToday,
   };
