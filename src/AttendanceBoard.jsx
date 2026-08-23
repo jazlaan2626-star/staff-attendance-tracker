@@ -52,7 +52,7 @@ function AdminGate({ login }) {
 }
 
 function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
-  const meta = STATUS_META[value || ''];
+  const meta = STATUS_META[value || ''] || STATUS_META[''];
   const [open, setOpen] = useState(false);
 
   const base = {

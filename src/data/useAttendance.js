@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MONTH_NAMES, generateMonthStatuses, daysInMonth } from './attendanceData';
+import { MONTH_NAMES, STATUS_OPTIONS, generateMonthStatuses, daysInMonth } from './attendanceData';
 import { effectiveRoster, updateRosterEntry } from './rosterStore';
 import { safeLocal, safeSession } from './safeStorage';
 
@@ -14,6 +14,15 @@ function buildStaffForMonth(year, month) {
   return effectiveRoster().map((s) => ({ ...s, statuses: generateMonthStatuses(s.weeklyOff, year, month) }));
 }
 
+// Legacy saves may contain statuses (e.g. the old 'OFF*') that no longer
+// exist in STATUS_META — normalize anything unrecognized to plain OFF so
+// a stale browser save can never crash the status-color lookup.
+function normalizeStatus(v) {
+  if (!v) return null;
+  if (STATUS_OPTIONS.includes(v)) return v;
+  return v.startsWith('OFF') ? 'OFF' : null;
+}
+
 // Merges saved edits onto a freshly generated month (so a shorter/longer
 // previous month, or a roster change, never desyncs the array length).
 function loadStaff(year, month) {
@@ -23,7 +32,9 @@ function loadStaff(year, month) {
     if (raw) {
       const saved = JSON.parse(raw);
       const byName = Object.fromEntries(saved.map((s) => [s.name, s.statuses]));
-      return base.map((s) => (byName[s.name] ? { ...s, statuses: byName[s.name].slice(0, s.statuses.length) } : s));
+      return base.map((s) => (byName[s.name]
+        ? { ...s, statuses: byName[s.name].slice(0, s.statuses.length).map(normalizeStatus) }
+        : s));
     }
   } catch { /* ignore */ }
   return base;
