@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search, CalendarDays } from 'lucide-react';
 import { useAttendance } from './data/useAttendance';
 import { STATUS_OPTIONS, STATUS_META, TEAMS, weekdayOf } from './data/attendanceData';
 import { downloadAttendanceExcel } from './data/exportExcel';
@@ -51,15 +51,16 @@ function AdminGate({ login }) {
   );
 }
 
-function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
+function StatusCell({ value, isAdmin, isToday, isSelected, isWeeklyOff, onChange }) {
   const meta = STATUS_META[value || ''] || STATUS_META[''];
   const [open, setOpen] = useState(false);
 
   const base = {
     width: 30, height: 26, borderRadius: 6, fontSize: 10, fontWeight: 700,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: meta.text, background: meta.bg,
-    border: `1px solid ${isToday ? ORANGE : (value ? meta.color + '55' : (isWeeklyOff ? 'rgba(255,106,0,0.25)' : 'rgba(255,255,255,0.06)'))}`,
+    color: meta.text, background: isSelected ? 'rgba(255,106,0,0.1)' : meta.bg,
+    border: `1px solid ${isToday || isSelected ? ORANGE : (value ? meta.color + '55' : (isWeeklyOff ? 'rgba(255,106,0,0.25)' : 'rgba(255,255,255,0.06)'))}`,
+    boxShadow: isSelected ? '0 0 0 1px rgba(255,106,0,0.35)' : 'none',
     cursor: isAdmin ? 'pointer' : 'default', position: 'relative', flexShrink: 0,
   };
 
@@ -128,6 +129,23 @@ export default function AttendanceBoard() {
   } = useAttendance();
   const [teamFilter, setTeamFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [selectedDay, setSelectedDay] = useState(null); // 1-based day of month, or null
+  const scrollRef = useRef(null);
+  const dayRefs = useRef({});
+
+  // Clear the date filter whenever the viewed month changes
+  useEffect(() => { setSelectedDay(null); }, [year, month]);
+
+  useEffect(() => {
+    if (selectedDay && dayRefs.current[selectedDay]) {
+      dayRefs.current[selectedDay].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [selectedDay]);
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateInputValue = selectedDay ? `${year}-${pad(month)}-${pad(selectedDay)}` : '';
+  const monthMin = `${year}-${pad(month)}-01`;
+  const monthMax = `${year}-${pad(month)}-${pad(totalDays)}`;
 
   const filtered = useMemo(() => {
     const byTeam = teamFilter === 'All' ? staff : staff.filter((s) => s.team === teamFilter);
@@ -229,6 +247,31 @@ export default function AttendanceBoard() {
                 }}
               />
             </div>
+            <div style={{ position: 'relative' }}>
+              <CalendarDays size={13} color="#666" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input
+                type="date"
+                value={dateInputValue}
+                min={monthMin}
+                max={monthMax}
+                onChange={(e) => {
+                  if (!e.target.value) { setSelectedDay(null); return; }
+                  setSelectedDay(Number(e.target.value.slice(-2)));
+                }}
+                title="Jump to a date"
+                style={{
+                  padding: '6px 10px 6px 28px', borderRadius: 8, fontSize: 12,
+                  background: 'rgba(255,255,255,0.03)', color: selectedDay ? '#fff' : '#888',
+                  border: `1px solid ${selectedDay ? 'rgba(255,106,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  outline: 'none', fontFamily: 'Inter, sans-serif', colorScheme: 'dark',
+                }}
+              />
+            </div>
+            {selectedDay && (
+              <button onClick={() => setSelectedDay(null)} style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 11, cursor: 'pointer' }}>
+                Clear date
+              </button>
+            )}
             <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
               {['All', ...TEAMS].map((t) => (
                 <button key={t} onClick={() => setTeamFilter(t)} style={{
@@ -240,17 +283,24 @@ export default function AttendanceBoard() {
           </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        <div ref={scrollRef} style={{ overflowX: 'auto' }}>
           <table style={{ borderCollapse: 'separate', borderSpacing: '3px', fontSize: 11 }}>
             <thead>
               <tr>
                 <th style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#fff', textAlign: 'left', padding: '6px 10px', minWidth: 110, zIndex: 2 }}>Staff</th>
                 <th style={{ color: '#888', minWidth: 70, fontWeight: 600 }}>Weekly Off</th>
                 {Array.from({ length: totalDays }, (_, i) => i + 1).map((d) => (
-                  <th key={d} style={{ color: '#666', fontWeight: 700, minWidth: 30 }}>
+                  <th
+                    key={d}
+                    ref={(el) => { dayRefs.current[d] = el; }}
+                    style={{
+                      color: d === selectedDay ? ORANGE : '#666', fontWeight: 700, minWidth: 30,
+                      background: d === selectedDay ? 'rgba(255,106,0,0.08)' : 'transparent', borderRadius: 6,
+                    }}
+                  >
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       {d}
-                      <span style={{ fontSize: 8, color: '#555', fontWeight: 400 }}>{DAY_ABBR[weekdayOf(year, month, d)]}</span>
+                      <span style={{ fontSize: 8, color: d === selectedDay ? '#ffb066' : '#555', fontWeight: 400 }}>{DAY_ABBR[weekdayOf(year, month, d)]}</span>
                     </div>
                   </th>
                 ))}
@@ -270,6 +320,7 @@ export default function AttendanceBoard() {
                         value={s.statuses[i]}
                         isAdmin={isAdmin}
                         isToday={i === todayIndex}
+                        isSelected={i + 1 === selectedDay}
                         isWeeklyOff={weekdayOf(year, month, i + 1) === s.weeklyOff}
                         onChange={(v) => setStatus(s.name, i, v)}
                       />
