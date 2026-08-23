@@ -110,12 +110,12 @@ function TeamCell({ name, team, isAdmin, onChange }) {
       onChange={(e) => onChange(name, e.target.value)}
       title="Change team"
       style={{
-        marginTop: 2, fontSize: 9, fontWeight: 600, color: ORANGE, cursor: 'pointer',
-        background: '#0a0a0a', border: '1px solid rgba(255,106,0,0.35)', borderRadius: 5,
-        padding: '2px 4px', outline: 'none', maxWidth: 110,
+        display: 'block', marginTop: 3, fontSize: 9, fontWeight: 500, color: '#888', cursor: 'pointer',
+        background: 'transparent', border: 'none', borderBottom: '1px dotted rgba(255,106,0,0.3)',
+        padding: '0 0 1px', outline: 'none', width: 'fit-content', appearance: 'none', WebkitAppearance: 'none',
       }}
     >
-      {TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+      {TEAMS.map((t) => <option key={t} value={t} style={{ background: '#0a0a0a', color: '#e5e5e5' }}>{t}</option>)}
     </select>
   );
 }
@@ -259,7 +259,7 @@ export default function AttendanceBoard() {
             <tbody>
               {filtered.map((s) => (
                 <tr key={s.name}>
-                  <td style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#e5e5e5', fontWeight: 600, padding: '6px 10px', zIndex: 1 }}>
+                  <td style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#e5e5e5', fontWeight: 600, padding: '8px 10px', zIndex: 1 }}>
                     {s.name}
                     <TeamCell name={s.name} team={s.team} isAdmin={isAdmin} onChange={setTeam} />
                   </td>
