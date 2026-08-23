@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #000000;
+  --sidebar:   #0a0a0a;
+  --card:      rgba(14, 14, 14, 0.95);
+  --border:    rgba(255, 106, 0, 0.18);
+  --border-h:  rgba(255, 106, 0, 0.4);
+  --t1:        #ffffff;
+  --t2:        #8a8a8a;
+  --orange:    #ff6a00;
+  --grad:      linear-gradient(135deg, #ff6a00 0%, #ff9a3c 100%);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.grad-text {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  border-color: var(--border-h);
+  background: rgba(20, 12, 4, 0.98);
+  box-shadow: 0 8px 32px rgba(255, 106, 0, 0.12);
+}
+
+/* Ambient blobs */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-1 { top: -15%; left: 5%;  width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,106,0,0.1) 0%, transparent 70%); }
+.blob-2 { bottom: 5%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,154,60,0.08) 0%, transparent 70%); }
+
+.section-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+.main-scroll::-webkit-scrollbar { width: 4px; }
+.main-scroll::-webkit-scrollbar-track { background: transparent; }
+.main-scroll::-webkit-scrollbar-thumb { background: rgba(255,106,0,0.2); border-radius: 2px; }
+
+@media (max-width: 768px) {
+  .section-grid-4 { grid-template-columns: 1fr 1fr !important; }
+  .main-scroll { padding: 18px 16px !important; }
+  .card { padding: 16px !important; }
+}
