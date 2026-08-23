@@ -21,7 +21,7 @@ export default class ErrorBoundary extends Component {
         }}>
           <p style={{ color: '#ff6a00', fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Something went wrong</p>
           <p style={{ color: '#8a8a8a', fontSize: 13, marginBottom: 16, maxWidth: 420 }}>
-            The page hit an unexpected error. Reloading usually fixes it — if this browser blocks
+            The page hit an unexpected error. Reloading usually fixes it. If this browser blocks
             local storage (private/incognito mode), try a normal browser window.
           </p>
           {this.state.error?.message && (
