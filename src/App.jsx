@@ -9,11 +9,6 @@ export default function App() {
         padding: '20px 36px', borderBottom: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 1,
       }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, background: 'rgba(255,106,0,0.15)',
-          border: '1px solid rgba(255,106,0,0.3)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontWeight: 800, color: '#ff6a00', fontSize: 14,
-        }}>S</div>
         <div>
           <p className="grad-text" style={{ fontSize: 15, fontWeight: 800, letterSpacing: '0.04em', margin: 0 }}>STAFF ATTENDANCE TRACKER</p>
           <p style={{ color: 'var(--t2)', fontSize: 11, margin: 0 }}>Off day & leave management</p>
@@ -22,8 +17,8 @@ export default function App() {
 
       <main className="main-scroll" style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 36px', position: 'relative', zIndex: 1 }}>
         <AttendanceBoard />
-        <p style={{ textAlign: 'center', color: 'rgba(255,106,0,0.2)', fontSize: 11, paddingBottom: 24 }}>
-          Staff Attendance Tracker · 2026
+        <p style={{ textAlign: 'center', color: 'rgba(255,106,0,0.35)', fontSize: 11, paddingBottom: 24 }}>
+          Developed with <span style={{ color: '#ff6a00' }}>&hearts;</span> by Jazlan Khalid
         </p>
       </main>
     </div>
