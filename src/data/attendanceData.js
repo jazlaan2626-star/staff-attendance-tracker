@@ -45,6 +45,37 @@ export const ROSTER = [
 
 export const TEAMS = ['Champion', 'FDC Champ', 'Distribution', 'Back Office'];
 
+// Actual recorded attendance for August 2026, sourced from OFF_DAY_TRACKER_1.xlsx
+// (includes real sick leave / absent / annual leave / resignations, not just
+// the auto-generated weekly-off pattern). Used as the base for that specific
+// month; every other month still auto-generates from ROSTER's weeklyOff.
+export const AUGUST_2026_SEED = {
+  "Yanal": [null,null,null,null,null,null,"OFF","SL",null,null,null,null,"SL","OFF","ABS","ABS","FRL",null,"OFF",null,"OFF",null,null,null,null,null,null,"OFF",null,null,null],
+  "Sadha": [null,null,null,null,"OFF",null,"SL",null,null,null,null,"OFF",null,null,"SL","ABS",null,null,"OFF",null,null,"FRL",null,null,null,"OFF",null,null,null,null,null],
+  "Nafkha": ["OFF",null,null,null,null,null,null,"OFF",null,null,"SL",null,null,null,"OFF",null,null,null,null,"FRL",null,"OFF",null,null,null,null,null,null,"OFF",null,null],
+  "Jawidh": [null,"OFF",null,null,null,null,null,null,"OFF",null,"SL",null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null],
+  "Aus": [null,null,"OFF",null,"AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","OFF",null,null,null,null,"SL",null,"OFF",null,null,null,null,null,null,"OFF"],
+  "Manaaf": [null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,"ABS","ABS","ABS","ABS","OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF"],
+  "Hafna": [null,null,null,null,null,"OFF","SL",null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null],
+  "Rahba": [null,null,null,null,"OFF",null,null,null,"SL","SL","SL","OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null],
+  "Lara": [null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null],
+  "Ihusha": ["OFF",null,null,"SL",null,null,null,"OFF",null,"SL","SL",null,null,null,"OFF",null,null,null,"SL",null,null,"OFF","FRL",null,null,null,null,null,"OFF",null,null],
+  "Affan": [null,"OFF",null,null,null,null,null,"SL","OFF",null,null,null,null,null,null,"OFF",null,"SL",null,null,null,"SL","OFF",null,null,null,null,null,null,"OFF",null],
+  "Azmee": [null,"OFF",null,null,null,null,null,null,"OFF","SL","SL","Resign",null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null],
+  "Hayath": [null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,"SL","OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null],
+  "Raya": [null,null,null,"OFF",null,null,null,null,null,"ABS","OFF","ABS","ABS","Resign",null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null],
+  "Nazal": [null,"OFF",null,null,null,null,null,null,"OFF","SL",null,null,"SL",null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null],
+  "Raaidh": ["OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null],
+  "Maain": ["OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null],
+  "Suma": [null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,"FRL",null,"FRL","OFF",null,null,null,"FRL",null,null,"OFF",null,null,null,null,null,null],
+  "Arusham": [null,null,null,null,null,"OFF","SL",null,null,null,null,null,"OFF",null,null,null,"SL",null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null],
+  "Yoosuf": [null,null,null,null,null,"OFF","SL",null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null],
+  "Naushan": [null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null],
+  "Muaz": [null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null],
+  "Aleem": ["OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null],
+  "Rismee": [null,null,null,null,null,null,"OFF",null,null,null,null,"SL",null,"OFF",null,null,null,null,null,null,"OFF",null,null,null,null,null,null,"OFF",null,null,null],
+};
+
 export const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 export const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
@@ -61,4 +92,13 @@ export function weekdayOf(year, month, day) {
 export function generateMonthStatuses(weeklyOff, year, month) {
   const total = daysInMonth(year, month);
   return Array.from({ length: total }, (_, i) => (weekdayOf(year, month, i + 1) === weeklyOff ? 'OFF' : null));
+}
+
+// Base statuses for a staff member in a given month: the recorded sheet data
+// for August 2026 if available, otherwise the auto-generated weekly pattern.
+export function baseStatusesFor(name, weeklyOff, year, month) {
+  if (year === 2026 && month === 8 && AUGUST_2026_SEED[name]) {
+    return [...AUGUST_2026_SEED[name]];
+  }
+  return generateMonthStatuses(weeklyOff, year, month);
 }

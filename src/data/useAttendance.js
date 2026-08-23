@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MONTH_NAMES, STATUS_OPTIONS, generateMonthStatuses, daysInMonth } from './attendanceData';
+import { MONTH_NAMES, STATUS_OPTIONS, generateMonthStatuses, baseStatusesFor, daysInMonth } from './attendanceData';
 import { effectiveRoster, updateRosterEntry } from './rosterStore';
 import { safeLocal, safeSession } from './safeStorage';
 
 const ADMIN_KEY = 'bluvia-attendance-admin';
 const ADMIN_PIN = '2626'; // simple local admin gate — no backend
 
+// v2: bumped so browsers with a stale August-2026 save (from before the
+// real attendance data was seeded in) pick up the fresh sheet data instead
+// of an old plain auto-generated pattern shadowing it.
 function storageKey(year, month) {
-  return `bluvia-attendance-${year}-${month}`;
+  return `bluvia-attendance-v2-${year}-${month}`;
 }
 
 function buildStaffForMonth(year, month) {
-  return effectiveRoster().map((s) => ({ ...s, statuses: generateMonthStatuses(s.weeklyOff, year, month) }));
+  return effectiveRoster().map((s) => ({ ...s, statuses: baseStatusesFor(s.name, s.weeklyOff, year, month) }));
 }
 
 // Legacy saves may contain statuses (e.g. the old 'OFF*') that no longer
