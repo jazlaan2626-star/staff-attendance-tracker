@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
 import { useAttendance } from './data/useAttendance';
 import { STATUS_OPTIONS, STATUS_META, TEAMS, weekdayOf } from './data/attendanceData';
 import { downloadAttendanceExcel } from './data/exportExcel';
@@ -64,13 +64,13 @@ function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
   };
 
   if (!isAdmin) {
-    return <div style={base} title={meta.label}>{value === 'OFF*' ? 'OFF' : (value || '')}</div>;
+    return <div style={base} title={meta.label}>{value || ''}</div>;
   }
 
   return (
     <div style={{ position: 'relative' }}>
       <div style={base} onClick={() => setOpen((o) => !o)} title="Click to edit">
-        {value === 'OFF*' ? 'OFF' : (value || '')}
+        {value || ''}
       </div>
       {open && (
         <>
@@ -102,43 +102,21 @@ function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
 }
 
 function TeamCell({ name, team, isAdmin, onChange }) {
-  const [open, setOpen] = useState(false);
-
   if (!isAdmin) return <div style={{ color: '#666', fontSize: 9, fontWeight: 400 }}>{team}</div>;
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <div
-        onClick={() => setOpen((o) => !o)}
-        title="Click to change team"
-        style={{ color: '#a3a3a3', fontSize: 9, fontWeight: 600, cursor: 'pointer', borderBottom: '1px dashed rgba(255,106,0,0.4)', display: 'inline-block' }}
-      >
-        {team}
-      </div>
-      {open && (
-        <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
-          <div style={{
-            position: 'absolute', top: 16, left: 0, zIndex: 41, background: '#0a0a0a',
-            border: '1px solid rgba(255,106,0,0.3)', borderRadius: 8, padding: 4,
-            display: 'flex', flexDirection: 'column', gap: 3, width: 130,
-            boxShadow: '0 12px 28px rgba(0,0,0,0.6)',
-          }}>
-            {TEAMS.map((t) => (
-              <button key={t} onClick={() => { onChange(name, t); setOpen(false); }}
-                style={{
-                  fontSize: 10, fontWeight: 600, padding: '5px 6px', borderRadius: 5, cursor: 'pointer', textAlign: 'left',
-                  border: `1px solid ${t === team ? ORANGE : 'rgba(255,255,255,0.08)'}`,
-                  background: t === team ? 'rgba(255,106,0,0.12)' : 'rgba(255,255,255,0.03)',
-                  color: t === team ? ORANGE : '#e5e5e5',
-                }}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <select
+      value={team}
+      onChange={(e) => onChange(name, e.target.value)}
+      title="Change team"
+      style={{
+        marginTop: 2, fontSize: 9, fontWeight: 600, color: ORANGE, cursor: 'pointer',
+        background: '#0a0a0a', border: '1px solid rgba(255,106,0,0.35)', borderRadius: 5,
+        padding: '2px 4px', outline: 'none', maxWidth: 110,
+      }}
+    >
+      {TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
   );
 }
 
@@ -149,26 +127,24 @@ export default function AttendanceBoard() {
     goPrevMonth, goNextMonth, goToday,
   } = useAttendance();
   const [teamFilter, setTeamFilter] = useState('All');
+  const [search, setSearch] = useState('');
 
-  const filtered = useMemo(
-    () => (teamFilter === 'All' ? staff : staff.filter((s) => s.team === teamFilter)),
-    [staff, teamFilter]
-  );
+  const filtered = useMemo(() => {
+    const byTeam = teamFilter === 'All' ? staff : staff.filter((s) => s.team === teamFilter);
+    const q = search.trim().toLowerCase();
+    return q ? byTeam.filter((s) => s.name.toLowerCase().includes(q)) : byTeam;
+  }, [staff, teamFilter, search]);
 
   const offToday = useMemo(() => {
     if (todayIndex == null) return [];
-    return staff.filter((s) => {
-      const v = s.statuses[todayIndex];
-      return v === 'OFF' || v === 'OFF*';
-    }).map((s) => s.name);
+    return staff.filter((s) => s.statuses[todayIndex] === 'OFF').map((s) => s.name);
   }, [staff, todayIndex]);
 
   const summary = useMemo(() => {
     const counts = { OFF: 0, SL: 0, AL: 0, ABS: 0, FRL: 0, Resign: 0 };
     staff.forEach((s) => s.statuses.forEach((v) => {
-      if (!v) return;
-      const key = v === 'OFF*' ? 'OFF' : v;
-      if (counts[key] !== undefined) counts[key] += 1;
+      if (!v || counts[v] === undefined) return;
+      counts[v] += 1;
     }));
     return counts;
   }, [staff]);
@@ -238,13 +214,29 @@ export default function AttendanceBoard() {
       <div className="card" style={{ padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
           <Legend />
-          <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-            {['All', ...TEAMS].map((t) => (
-              <button key={t} onClick={() => setTeamFilter(t)} style={{
-                padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none',
-                background: teamFilter === t ? ORANGE : 'transparent', color: teamFilter === t ? '#0a0a0a' : '#a3a3a3',
-              }}>{t}</button>
-            ))}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={13} color="#666" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search staff…"
+                style={{
+                  padding: '6px 10px 6px 28px', borderRadius: 8, fontSize: 12, width: 150,
+                  background: 'rgba(255,255,255,0.03)', color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.08)', outline: 'none', fontFamily: 'Inter, sans-serif',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+              {['All', ...TEAMS].map((t) => (
+                <button key={t} onClick={() => setTeamFilter(t)} style={{
+                  padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none',
+                  background: teamFilter === t ? ORANGE : 'transparent', color: teamFilter === t ? '#0a0a0a' : '#a3a3a3',
+                }}>{t}</button>
+              ))}
+            </div>
           </div>
         </div>
 

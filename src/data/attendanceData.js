@@ -3,12 +3,11 @@
    whichever month is showing. Admin edits (sick leave, absent, etc.)
    are layered on top and persisted per month in localStorage. */
 
-export const STATUS_OPTIONS = ['', 'OFF', 'OFF*', 'SL', 'AL', 'ABS', 'FRL', 'Resign'];
+export const STATUS_OPTIONS = ['', 'OFF', 'SL', 'AL', 'ABS', 'FRL', 'Resign'];
 
 export const STATUS_META = {
   '':       { label: 'Working', color: '#3a3a3a', bg: 'transparent',            text: '#6b6b6b' },
   'OFF':    { label: 'Weekly Off',   color: '#ff6a00', bg: 'rgba(255,106,0,0.18)', text: '#ff8a2e' },
-  'OFF*':   { label: 'Off (Swapped)',color: '#ff9a3c', bg: 'rgba(255,154,60,0.14)',text: '#ffb066' },
   'SL':     { label: 'Sick Leave',   color: '#facc15', bg: 'rgba(250,204,21,0.14)', text: '#facc15' },
   'AL':     { label: 'Annual Leave', color: '#38bdf8', bg: 'rgba(56,189,248,0.14)', text: '#38bdf8' },
   'ABS':    { label: 'Absent',       color: '#ef4444', bg: 'rgba(239,68,68,0.16)',  text: '#ef4444' },
