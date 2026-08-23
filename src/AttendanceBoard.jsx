@@ -101,9 +101,50 @@ function StatusCell({ value, isAdmin, isToday, isWeeklyOff, onChange }) {
   );
 }
 
+function TeamCell({ name, team, isAdmin, onChange }) {
+  const [open, setOpen] = useState(false);
+
+  if (!isAdmin) return <div style={{ color: '#666', fontSize: 9, fontWeight: 400 }}>{team}</div>;
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div
+        onClick={() => setOpen((o) => !o)}
+        title="Click to change team"
+        style={{ color: '#a3a3a3', fontSize: 9, fontWeight: 600, cursor: 'pointer', borderBottom: '1px dashed rgba(255,106,0,0.4)', display: 'inline-block' }}
+      >
+        {team}
+      </div>
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
+          <div style={{
+            position: 'absolute', top: 16, left: 0, zIndex: 41, background: '#0a0a0a',
+            border: '1px solid rgba(255,106,0,0.3)', borderRadius: 8, padding: 4,
+            display: 'flex', flexDirection: 'column', gap: 3, width: 130,
+            boxShadow: '0 12px 28px rgba(0,0,0,0.6)',
+          }}>
+            {TEAMS.map((t) => (
+              <button key={t} onClick={() => { onChange(name, t); setOpen(false); }}
+                style={{
+                  fontSize: 10, fontWeight: 600, padding: '5px 6px', borderRadius: 5, cursor: 'pointer', textAlign: 'left',
+                  border: `1px solid ${t === team ? ORANGE : 'rgba(255,255,255,0.08)'}`,
+                  background: t === team ? 'rgba(255,106,0,0.12)' : 'rgba(255,255,255,0.03)',
+                  color: t === team ? ORANGE : '#e5e5e5',
+                }}>
+                {t}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AttendanceBoard() {
   const {
-    staff, setStatus, isAdmin, login, logout, resetToSeed, todayIndex,
+    staff, setStatus, setTeam, isAdmin, login, logout, resetToSeed, todayIndex,
     year, month, monthLabel, totalDays, isCurrentMonth,
     goPrevMonth, goNextMonth, goToday,
   } = useAttendance();
@@ -228,7 +269,7 @@ export default function AttendanceBoard() {
                 <tr key={s.name}>
                   <td style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#e5e5e5', fontWeight: 600, padding: '6px 10px', zIndex: 1 }}>
                     {s.name}
-                    <div style={{ color: '#666', fontSize: 9, fontWeight: 400 }}>{s.team}</div>
+                    <TeamCell name={s.name} team={s.team} isAdmin={isAdmin} onChange={setTeam} />
                   </td>
                   <td style={{ textAlign: 'center', color: '#888', fontSize: 10 }}>{s.weeklyOff}</td>
                   {Array.from({ length: totalDays }, (_, i) => i).map((i) => (

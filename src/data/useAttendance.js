@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ROSTER, MONTH_NAMES, generateMonthStatuses, daysInMonth } from './attendanceData';
+import { MONTH_NAMES, generateMonthStatuses, daysInMonth } from './attendanceData';
+import { effectiveRoster, updateRosterEntry } from './rosterStore';
 
 const ADMIN_KEY = 'bluvia-attendance-admin';
 const ADMIN_PIN = '2626'; // simple local admin gate — no backend
@@ -9,7 +10,7 @@ function storageKey(year, month) {
 }
 
 function buildStaffForMonth(year, month) {
-  return ROSTER.map((s) => ({ ...s, statuses: generateMonthStatuses(s.weeklyOff, year, month) }));
+  return effectiveRoster().map((s) => ({ ...s, statuses: generateMonthStatuses(s.weeklyOff, year, month) }));
 }
 
 // Merges saved edits onto a freshly generated month (so a shorter/longer
@@ -50,6 +51,21 @@ export function useAttendance() {
     }));
   }, []);
 
+  // Changes a staff member's team/category — persists globally (not per-month).
+  const setTeam = useCallback((name, team) => {
+    updateRosterEntry(name, { team });
+    setStaff((prev) => prev.map((s) => (s.name === name ? { ...s, team } : s)));
+  }, []);
+
+  // Changes a staff member's weekly off day — persists globally and regenerates
+  // their auto-OFF days for the month currently in view.
+  const setWeeklyOff = useCallback((name, weeklyOff) => {
+    updateRosterEntry(name, { weeklyOff });
+    setStaff((prev) => prev.map((s) => (
+      s.name === name ? { ...s, weeklyOff, statuses: generateMonthStatuses(weeklyOff, year, month) } : s
+    )));
+  }, [year, month]);
+
   const login = useCallback((pin) => {
     if (pin === ADMIN_PIN) {
       sessionStorage.setItem(ADMIN_KEY, '1');
@@ -83,7 +99,7 @@ export function useAttendance() {
   const totalDays = daysInMonth(year, month);
 
   return {
-    staff, setStatus, isAdmin, login, logout, resetToSeed, todayIndex,
+    staff, setStatus, setTeam, setWeeklyOff, isAdmin, login, logout, resetToSeed, todayIndex,
     year, month, monthLabel, totalDays, isCurrentMonth,
     goPrevMonth, goNextMonth, goToday,
   };
