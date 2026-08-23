@@ -172,7 +172,7 @@ export default function AttendanceBoard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <p style={{ color: ORANGE, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>Staff Attendance</p>
-          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Off-Day Tracker</h2>
+          <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: 0 }}>Off Day Tracker</h2>
         </div>
         {isAdmin ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

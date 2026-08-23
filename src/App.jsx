@@ -16,7 +16,7 @@ export default function App() {
         }}>S</div>
         <div>
           <p className="grad-text" style={{ fontSize: 15, fontWeight: 800, letterSpacing: '0.04em', margin: 0 }}>STAFF ATTENDANCE TRACKER</p>
-          <p style={{ color: 'var(--t2)', fontSize: 11, margin: 0 }}>Off-day & leave management</p>
+          <p style={{ color: 'var(--t2)', fontSize: 11, margin: 0 }}>Off day & leave management</p>
         </div>
       </header>
 

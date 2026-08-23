@@ -14,7 +14,7 @@ export function downloadAttendanceExcel(staff, monthLabel, totalDays, year, mont
     ...Array.from({ length: totalDays }, (_, i) => s.statuses[i] || ''),
   ]);
 
-  const sheet = XLSX.utils.aoa_to_sheet([[`Staff Off-Day Tracker (${monthLabel})`], [], header, ...rows]);
+  const sheet = XLSX.utils.aoa_to_sheet([[`Staff Off Day Tracker (${monthLabel})`], [], header, ...rows]);
   sheet['!cols'] = [{ wch: 14 }, { wch: 14 }, { wch: 14 }, ...dayHeaders.map(() => ({ wch: 8 }))];
 
   const workbook = XLSX.utils.book_new();
