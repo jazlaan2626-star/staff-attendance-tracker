@@ -1,10 +1,11 @@
 import { ROSTER } from './attendanceData';
+import { safeLocal } from './safeStorage';
 
 const KEY = 'bluvia-attendance-roster-overrides';
 
 function readOverrides() {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = safeLocal.get(KEY);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -12,7 +13,7 @@ function readOverrides() {
 }
 
 function writeOverrides(overrides) {
-  localStorage.setItem(KEY, JSON.stringify(overrides));
+  safeLocal.set(KEY, JSON.stringify(overrides));
 }
 
 // Roster with any admin edits (team/weekly-off changes) applied on top of the base sheet.
@@ -28,5 +29,5 @@ export function updateRosterEntry(name, patch) {
 }
 
 export function resetRosterOverrides() {
-  localStorage.removeItem(KEY);
+  safeLocal.remove(KEY);
 }

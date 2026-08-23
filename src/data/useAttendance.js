@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MONTH_NAMES, generateMonthStatuses, daysInMonth } from './attendanceData';
 import { effectiveRoster, updateRosterEntry } from './rosterStore';
+import { safeLocal, safeSession } from './safeStorage';
 
 const ADMIN_KEY = 'bluvia-attendance-admin';
 const ADMIN_PIN = '2626'; // simple local admin gate — no backend
@@ -18,7 +19,7 @@ function buildStaffForMonth(year, month) {
 function loadStaff(year, month) {
   const base = buildStaffForMonth(year, month);
   try {
-    const raw = localStorage.getItem(storageKey(year, month));
+    const raw = safeLocal.get(storageKey(year, month));
     if (raw) {
       const saved = JSON.parse(raw);
       const byName = Object.fromEntries(saved.map((s) => [s.name, s.statuses]));
@@ -33,13 +34,13 @@ export function useAttendance() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-12
   const [staff, setStaff] = useState(() => loadStaff(year, month));
-  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem(ADMIN_KEY) === '1');
+  const [isAdmin, setIsAdmin] = useState(() => safeSession.get(ADMIN_KEY) === '1');
 
   // Reload whenever the viewed month changes
   useEffect(() => { setStaff(loadStaff(year, month)); }, [year, month]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey(year, month), JSON.stringify(staff));
+    safeLocal.set(storageKey(year, month), JSON.stringify(staff));
   }, [staff, year, month]);
 
   const setStatus = useCallback((name, dayIndex, value) => {
@@ -68,7 +69,7 @@ export function useAttendance() {
 
   const login = useCallback((pin) => {
     if (pin === ADMIN_PIN) {
-      sessionStorage.setItem(ADMIN_KEY, '1');
+      safeSession.set(ADMIN_KEY, '1');
       setIsAdmin(true);
       return true;
     }
@@ -76,12 +77,12 @@ export function useAttendance() {
   }, []);
 
   const logout = useCallback(() => {
-    sessionStorage.removeItem(ADMIN_KEY);
+    safeSession.remove(ADMIN_KEY);
     setIsAdmin(false);
   }, []);
 
   const resetToSeed = useCallback(() => {
-    localStorage.removeItem(storageKey(year, month));
+    safeLocal.remove(storageKey(year, month));
     setStaff(buildStaffForMonth(year, month));
   }, [year, month]);
 
