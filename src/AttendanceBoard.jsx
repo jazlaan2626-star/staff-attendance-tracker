@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Lock, Unlock, RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, Download, Search, CalendarDays, UserX, Undo2 } from 'lucide-react';
 import { useAttendance } from './data/useAttendance';
-import { STATUS_OPTIONS, STATUS_META, TEAMS, weekdayOf } from './data/attendanceData';
+import { STATUS_OPTIONS, STATUS_META, TEAMS, MONTH_NAMES, weekdayOf } from './data/attendanceData';
 import { downloadAttendanceExcel } from './data/exportExcel';
 
 const ORANGE = '#ff6a00';
@@ -146,6 +146,7 @@ export default function AttendanceBoard() {
   const [teamFilter, setTeamFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState(null); // 1-based day of month, or null
+  const [activeTile, setActiveTile] = useState(null); // status key currently expanded in the summary grid, or null
 
   const activeStaff = useMemo(() => staff.filter((s) => !s.resigned), [staff]);
   const resignedStaff = useMemo(() => staff.filter((s) => s.resigned), [staff]);
@@ -153,7 +154,16 @@ export default function AttendanceBoard() {
   const dayRefs = useRef({});
 
   // Clear the date filter whenever the viewed month changes
-  useEffect(() => { setSelectedDay(null); }, [year, month]);
+  useEffect(() => { setSelectedDay(null); setActiveTile(null); }, [year, month]);
+
+  // Which day to look up for the "who's on X today" tiles: the picked date, else today.
+  const lookupDayIndex = selectedDay ? selectedDay - 1 : todayIndex;
+  const lookupDayLabel = selectedDay ? `${MONTH_NAMES[month - 1]} ${selectedDay}` : 'today';
+
+  const tileNames = useMemo(() => {
+    if (!activeTile || lookupDayIndex == null) return [];
+    return activeStaff.filter((s) => s.statuses[lookupDayIndex] === activeTile).map((s) => s.name);
+  }, [activeTile, lookupDayIndex, activeStaff]);
 
   useEffect(() => {
     if (selectedDay && dayRefs.current[selectedDay]) {
@@ -242,14 +252,38 @@ export default function AttendanceBoard() {
         </div>
       )}
 
-      <div className="section-grid-4" style={{ marginBottom: 20 }}>
+      <div className="section-grid-4" style={{ marginBottom: activeTile ? 12 : 20 }}>
         {Object.entries(summary).map(([k, v]) => (
-          <div key={k} className="card" style={{ textAlign: 'center', padding: 16 }}>
+          <div
+            key={k}
+            className="card"
+            onClick={() => setActiveTile((cur) => (cur === k ? null : k))}
+            title={`Who's on ${STATUS_META[k]?.label || k} ${lookupDayLabel}`}
+            style={{
+              textAlign: 'center', padding: 16, cursor: 'pointer',
+              borderColor: activeTile === k ? (STATUS_META[k]?.color || ORANGE) + '80' : undefined,
+            }}
+          >
             <p style={{ fontSize: 22, fontWeight: 800, margin: 0, color: STATUS_META[k]?.color || ORANGE }}>{v}</p>
             <p style={{ color: '#888', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '6px 0 0' }}>{STATUS_META[k]?.label || k}</p>
           </div>
         ))}
       </div>
+
+      {activeTile && (
+        <div className="card" style={{ padding: '14px 18px', marginBottom: 20, borderColor: (STATUS_META[activeTile]?.color || ORANGE) + '50' }}>
+          <p style={{ color: STATUS_META[activeTile]?.color || ORANGE, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            {STATUS_META[activeTile]?.label || activeTile} ({lookupDayLabel})
+          </p>
+          {lookupDayIndex == null ? (
+            <p style={{ color: '#666', fontSize: 13 }}>Pick a date above to see who's on {STATUS_META[activeTile]?.label || activeTile} that day.</p>
+          ) : tileNames.length > 0 ? (
+            <p style={{ color: '#e5e5e5', fontSize: 13 }}>{tileNames.join(', ')}</p>
+          ) : (
+            <p style={{ color: '#666', fontSize: 13 }}>Nobody is on {STATUS_META[activeTile]?.label || activeTile} {lookupDayLabel}.</p>
+          )}
+        </div>
+      )}
 
       <div className="card" style={{ padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
