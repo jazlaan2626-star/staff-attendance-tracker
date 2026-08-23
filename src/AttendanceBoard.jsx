@@ -121,6 +121,22 @@ function TeamCell({ name, team, isAdmin, onChange }) {
   );
 }
 
+function RestoreButton({ name, onRestore }) {
+  return (
+    <button
+      onClick={() => onRestore(name)}
+      title="Restore to active tracker"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, padding: '2px 7px', borderRadius: 6,
+        border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)', color: '#4ade80',
+        fontSize: 9, fontWeight: 600, cursor: 'pointer',
+      }}
+    >
+      <Undo2 size={10} /> Restore
+    </button>
+  );
+}
+
 export default function AttendanceBoard() {
   const {
     staff, setStatus, setTeam, setResigned, isAdmin, login, logout, resetToSeed, todayIndex,
@@ -130,7 +146,6 @@ export default function AttendanceBoard() {
   const [teamFilter, setTeamFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState(null); // 1-based day of month, or null
-  const [showResigned, setShowResigned] = useState(false);
 
   const activeStaff = useMemo(() => staff.filter((s) => !s.resigned), [staff]);
   const resignedStaff = useMemo(() => staff.filter((s) => s.resigned), [staff]);
@@ -152,10 +167,13 @@ export default function AttendanceBoard() {
   const monthMax = `${year}-${pad(month)}-${pad(totalDays)}`;
 
   const filtered = useMemo(() => {
-    const byTeam = teamFilter === 'All' ? activeStaff : activeStaff.filter((s) => s.team === teamFilter);
+    let byTeam;
+    if (teamFilter === 'Resigned') byTeam = resignedStaff;
+    else if (teamFilter === 'All') byTeam = activeStaff;
+    else byTeam = activeStaff.filter((s) => s.team === teamFilter);
     const q = search.trim().toLowerCase();
     return q ? byTeam.filter((s) => s.name.toLowerCase().includes(q)) : byTeam;
-  }, [activeStaff, teamFilter, search]);
+  }, [activeStaff, resignedStaff, teamFilter, search]);
 
   const offToday = useMemo(() => {
     if (todayIndex == null) return [];
@@ -186,11 +204,6 @@ export default function AttendanceBoard() {
             <button onClick={resetToSeed} title="Reset this month to auto-generated off days" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
               <RotateCcw size={13} /> Reset
             </button>
-            {resignedStaff.length > 0 && (
-              <button onClick={() => setShowResigned((v) => !v)} title="View resigned staff" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: `1px solid ${showResigned ? 'rgba(255,106,0,0.4)' : 'rgba(255,255,255,0.1)'}`, background: showResigned ? 'rgba(255,106,0,0.1)' : 'transparent', color: showResigned ? ORANGE : '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
-                <UserX size={13} /> Resigned ({resignedStaff.length})
-              </button>
-            )}
             <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#a3a3a3', fontSize: 12, cursor: 'pointer' }}>
               <Unlock size={13} /> Lock
             </button>
@@ -221,22 +234,6 @@ export default function AttendanceBoard() {
           <Download size={13} /> Download Excel
         </button>
       </div>
-
-      {isAdmin && showResigned && resignedStaff.length > 0 && (
-        <div className="card" style={{ padding: '14px 18px', marginBottom: 20, borderColor: 'rgba(255,255,255,0.1)' }}>
-          <p style={{ color: '#a3a3a3', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Resigned staff</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {resignedStaff.map((s) => (
-              <div key={s.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ color: '#e5e5e5', fontSize: 13 }}>{s.name} <span style={{ color: '#666', fontSize: 11 }}>· {s.team}</span></span>
-                <button onClick={() => setResigned(s.name, false)} title="Restore to active tracker" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 7, border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.08)', color: '#4ade80', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
-                  <Undo2 size={12} /> Restore
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {offToday.length > 0 && (
         <div className="card" style={{ padding: '14px 18px', marginBottom: 20, borderColor: 'rgba(255,106,0,0.3)' }}>
@@ -297,12 +294,17 @@ export default function AttendanceBoard() {
                 Clear date
               </button>
             )}
-            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-              {['All', ...TEAMS].map((t) => (
+            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
+              {['All', ...TEAMS, 'Resigned'].map((t) => (
                 <button key={t} onClick={() => setTeamFilter(t)} style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
                   padding: '5px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none',
-                  background: teamFilter === t ? ORANGE : 'transparent', color: teamFilter === t ? '#0a0a0a' : '#a3a3a3',
-                }}>{t}</button>
+                  background: teamFilter === t ? (t === 'Resigned' ? '#71717a' : ORANGE) : 'transparent',
+                  color: teamFilter === t ? '#0a0a0a' : '#a3a3a3',
+                }}>
+                  {t === 'Resigned' && <UserX size={11} />}
+                  {t}{t === 'Resigned' && resignedStaff.length > 0 ? ` (${resignedStaff.length})` : ''}
+                </button>
               ))}
             </div>
           </div>
@@ -336,14 +338,21 @@ export default function AttendanceBoard() {
                 <tr key={s.name}>
                   <td style={{ position: 'sticky', left: 0, background: '#0a0a0a', color: '#e5e5e5', fontWeight: 600, padding: '8px 10px', zIndex: 1 }}>
                     {s.name}
-                    <TeamCell name={s.name} team={s.team} isAdmin={isAdmin} onChange={setTeam} />
+                    {s.resigned ? (
+                      <>
+                        <div style={{ color: '#666', fontSize: 9, fontWeight: 400 }}>{s.team}</div>
+                        {isAdmin && <RestoreButton name={s.name} onRestore={(n) => setResigned(n, false)} />}
+                      </>
+                    ) : (
+                      <TeamCell name={s.name} team={s.team} isAdmin={isAdmin} onChange={setTeam} />
+                    )}
                   </td>
                   <td style={{ textAlign: 'center', color: '#888', fontSize: 10 }}>{s.weeklyOff}</td>
                   {Array.from({ length: totalDays }, (_, i) => i).map((i) => (
                     <td key={i} style={{ textAlign: 'center' }}>
                       <StatusCell
                         value={s.statuses[i]}
-                        isAdmin={isAdmin}
+                        isAdmin={isAdmin && !s.resigned}
                         isToday={i === todayIndex}
                         isSelected={i + 1 === selectedDay}
                         isWeeklyOff={weekdayOf(year, month, i + 1) === s.weeklyOff}
